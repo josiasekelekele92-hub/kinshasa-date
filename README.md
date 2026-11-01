@@ -22,16 +22,8 @@ Le message et les choix restent dans le navigateur : la page ne collecte ni ne t
 
 
 
-- `index.html` — structure de la page et métadonnées.
-- 
-- `styles.css` — identité visuelle, animations, états de focus et adaptations mobiles.
-- 
-- `script.js` — navigation sans rechargement, choix et calendrier.
-- 
-- `assets/` — icône du site et illustrations SVG de secours.
-- 
-- `manus-routes.json` — route d’accueil pour l’environnement de développement Manus.
-- 
+Les fichiers principaux sont `index.html` (structure et métadonnées), `styles.css` (identité visuelle, animations, focus et responsive), `script.js` (navigation, choix et calendrier), `assets/` (favicon et illustrations SVG locales) ainsi que `manus-routes.json` (route d’accueil pour l’environnement de développement Manus).
+
 
 
 ## Prévisualiser localement
@@ -59,7 +51,3 @@ Puis ouvrir `http://localhost:3000`.
 
 
 Le site ne nécessite aucune compilation. GitHub Pages est configuré pour publier la branche `main` depuis la racine (`/`) du dépôt. L’adresse publique est [josiasekelekele92-hub.github.io/kinshasa-date](https://josiasekelekele92-hub.github.io/kinshasa-date/).
-
-
-
-
