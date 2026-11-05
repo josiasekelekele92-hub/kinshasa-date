@@ -179,6 +179,10 @@ h1, h2, h3, p { margin-top: 0; }
 .message-input { width: 100%; min-height: 83px; padding: 13px 14px; resize: vertical; border: 1px solid #eddadb; border-radius: 10px; color: #59464a; background: #fffefa; font-family: var(--serif); font-size: 15px; line-height: 1.55; }
 .message-input::placeholder { color: #bca9aa; }
 .message-hint { margin: 7px 0 0; color: #a89495; font-size: 9px; }
+.submit-status { margin: 9px 0 0; font-size: 10px; line-height: 1.5; }
+.submit-status.is-pending { color: #9a7d81; }
+.submit-status.is-error { color: #a43f51; }
+.submit-status[hidden] { display: none; }
 .final-actions { align-items: center; }
 .send-button { min-height: 48px; min-width: 190px; background: var(--green); box-shadow: 0 8px 20px rgba(66, 124, 99, .2); }
 .send-button:hover { background: var(--green-dark); box-shadow: 0 11px 24px rgba(66, 124, 99, .25); }

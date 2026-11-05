@@ -3,6 +3,7 @@ const progressWrap = document.querySelector('#progressWrap');
 const progressTrack = document.querySelector('#progressTrack');
 const stepCounter = document.querySelector('#stepCounter');
 const celebrationLayer = document.querySelector('#celebrationLayer');
+const FORM_ENDPOINT = 'https://formspree.io/f/mljjzoay';
 
 const dateTypes = [
   { id: 'activity', emoji: '📸', label: 'Une activité' },
@@ -71,6 +72,7 @@ const state = {
   message: 'Bon... maintenant t’es officiellement coincé(e) avec moi 🥰❤️',
   refusalCount: 0,
   completed: false,
+  submitting: false,
   calendarYear: new Date().getFullYear(),
   calendarMonth: new Date().getMonth(),
 };
@@ -237,7 +239,7 @@ function renderSummary() {
   ];
   const rows = items.map(([key, value]) => `<div class="summary-item"><dt>${key}</dt><dd>${escapeHtml(value)}</dd></div>`).join('');
   return `<section class="step-card">${heading('ÉTAPE 5 · PRESQUE OFFICIEL', 'Alors, on valide ? 🥰', 'Un dernier petit mot, si le cœur t’en dit.')}
-    <div class="card-surface summary-card"><p class="summary-topline">NOTRE PETIT PROGRAMME</p><dl class="summary-list">${rows}</dl><label class="message-label" for="finalMessage"><span>Ton message</span><span>modifiable à volonté</span></label><textarea class="message-input" id="finalMessage" maxlength="400" aria-describedby="messageHint">${escapeHtml(state.message)}</textarea><p class="message-hint" id="messageHint">Ce message restera sur ton écran — aucune réponse n’est envoyée à un tiers.</p>${actions('← Modifier le moment', 'Envoyer ma réponse ❤️')}</div>
+    <div class="card-surface summary-card"><p class="summary-topline">NOTRE PETIT PROGRAMME</p><dl class="summary-list">${rows}</dl><label class="message-label" for="finalMessage"><span>Ton message</span><span>modifiable à volonté</span></label><textarea class="message-input" id="finalMessage" maxlength="400" aria-describedby="messageHint">${escapeHtml(state.message)}</textarea><p class="message-hint" id="messageHint">En envoyant, tes choix et ton message seront transmis à Josias par e-mail via Formspree.</p><p class="submit-status" id="submitStatus" role="status" aria-live="polite" hidden></p>${actions('← Modifier le moment', 'Envoyer ma réponse ❤️')}</div>
     </section>`;
 }
 
@@ -317,6 +319,58 @@ function makeConfetti() {
   window.setTimeout(() => { celebrationLayer.replaceChildren(); }, 7000);
 }
 
+async function submitResponse() {
+  if (state.submitting) return;
+
+  const messageField = stage.querySelector('#finalMessage');
+  const status = stage.querySelector('#submitStatus');
+  const buttons = stage.querySelectorAll('[data-action="continue"], [data-action="back"]');
+  state.message = messageField.value.trim();
+  state.submitting = true;
+  buttons.forEach((button) => { button.disabled = true; });
+  status.hidden = false;
+  status.className = 'submit-status is-pending';
+  status.textContent = 'Envoi de ta réponse…';
+
+  const payload = new FormData();
+  payload.append('_subject', 'Réponse à ton invitation — premier date à Kinshasa');
+  payload.append('Notre idée', labelForType());
+  payload.append('L’ambiance', labelForAmbience());
+  payload.append('Le jour', labelForDate());
+  payload.append('Le moment', labelForMoment());
+  payload.append('Message', state.message || '(aucun message)');
+  payload.append('_gotcha', '');
+
+  try {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    let response;
+    try {
+      response = await fetch(FORM_ENDPOINT, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: payload,
+        signal: controller.signal,
+      });
+    } finally {
+      window.clearTimeout(timeout);
+    }
+
+    if (!response.ok) throw new Error(`Formspree responded with ${response.status}`);
+    state.submitting = false;
+    state.completed = true;
+    makeConfetti();
+    render();
+    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  } catch (error) {
+    console.error('Formspree submission failed:', error);
+    state.submitting = false;
+    status.className = 'submit-status is-error';
+    status.textContent = 'La réponse n’a pas pu être envoyée. Vérifie ta connexion et réessaie.';
+    buttons.forEach((button) => { button.disabled = false; });
+  }
+}
+
 function continueFlow() {
   if (state.step === 1) {
     if (!state.type) return;
@@ -332,9 +386,8 @@ function continueFlow() {
     if (!state.moment) return;
     state.step = 5;
   } else if (state.step === 5) {
-    state.message = stage.querySelector('#finalMessage').value.trim();
-    state.completed = true;
-    makeConfetti();
+    submitResponse();
+    return;
   }
   render();
   window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
